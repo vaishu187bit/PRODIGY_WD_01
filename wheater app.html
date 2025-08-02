@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weather App</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #667eea, #764ba2);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .weather-container {
+      background-color: rgba(0, 0, 0, 0.3);
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      width: 300px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      margin: 5px;
+      border-radius: 5px;
+    }
+
+    input {
+      width: 70%;
+    }
+
+    button {
+      cursor: pointer;
+      background-color: #00ffcc;
+      color: #000;
+      font-weight: bold;
+    }
+
+    .weather-result {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+
+    .error {
+      color: #ff4d4d;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="weather-container">
+    <h2>🌤️ Weather App</h2>
+    <input type="text" id="cityInput" placeholder="Enter city" />
+    <button onclick="getWeatherByCity()">Search</button>
+    <br />
+    <button onclick="getWeatherByLocation()">📍 Get My Location</button>
+
+    <div class="weather-result" id="result"></div>
+    <div class="error" id="error"></div>
+  </div>
+
+  <script>
+    const API_KEY = 'YOUR_API_KEY_HERE';
+
+    async function getWeatherByCity() {
+      const city = document.getElementById('cityInput').value.trim();
+      if (!city) return showError("Please enter a city name.");
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`;
+      fetchWeather(url);
+    }
+
+    async function getWeatherByLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
+          fetchWeather(url);
+        }, () => {
+          showError("Location access denied.");
+        });
+      } else {
+        showError("Geolocation not supported.");
+      }
+    }
+
+    async function fetchWeather(url) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("City not found.");
+        const data = await res.json();
+
+        const html = `
+          <h3>${data.name}, ${data.sys.country}</h3>
+          <p><strong>${data.weather[0].main}</strong> - ${data.weather[0].description}</p>
+          <p>🌡️ Temp: ${data.main.temp} °C</p>
+          <p>💧 Humidity: ${data.main.humidity}%</p>
+          <p>🌬️ Wind: ${data.wind.speed} m/s</p>
+        `;
+
+        document.getElementById('result').innerHTML = html;
+        document.getElementById('error').innerText = "";
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('error').innerText = msg;
+      document.getElementById('result').innerHTML = "";
+    }
+  </script>
+
+</body>
+</html>
